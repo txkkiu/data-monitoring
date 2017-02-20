@@ -10,7 +10,16 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../rocksdb/java/target/rocksdbjni-5.0.0-osx.jar!/" />
+          <root url="jar://$USER_HOME$/Rocks/rocksdb/java/target/rocksdbjni-5.0.0-linux64.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/gson-2.8.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
