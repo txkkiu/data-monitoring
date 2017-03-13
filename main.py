@@ -8,6 +8,8 @@ import pandas
 import pymongo
 import time
 import requests
+import json
+import ast
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 '''
@@ -45,18 +47,21 @@ def set_pair(key, value, rocksdb):
     data_in['id'] = str(key)
     t_type = 'CREATE'
     success = False
-    if server_get_value(key, rocksdb) is not "key not found":
+    history_in = {}
+    oldValue = server_get_value(key, rocksdb)
+    if oldValue is not "key not found":
+        history_in['old_value'] = oldValue
         t_type = 'UPDATE'
         success = server_set_value(key, value, rocksdb)
     else:
         success = server_set_value(key, value, rocksdb)
+        history_in['old_value'] = ""
     if success:
         now = datetime.datetime.now()
         key_data = str(key)
         value_data = str(value)
         user = getpass.getuser()
-        history_in = {}
-
+        
         history_in['key'] = key_data
         history_in['value'] = value_data
         history_in['user'] = user
@@ -65,6 +70,14 @@ def set_pair(key, value, rocksdb):
         result_h = db.history.insert_one(history_in)
         #send_email(t_type, history_in)
         return 'success'
+
+def server_get_value(key , rocksdb):
+    url = "http://localhost:8080/get"
+    querystring = {"key":key, "db": rocksdb}
+    response = requests.request("GET", url, params=querystring)
+    if response.status_code != requests.codes.ok:
+        return "key not found" 
+    return json.loads(response.text)['value']  
 
 def server_set_value(key, value, rocksdb):
     url = "http://localhost:8080/set"
@@ -76,10 +89,8 @@ def server_set_value(key, value, rocksdb):
         }
 
     response = requests.request("POST", url, data=payload, headers=headers)
-    if response.status_code == 200:
-        return True
-    else:
-        return False 
+    return response.status_code == requests.codes.ok
+     
 
 def history(num_rows=-1):
     history = []
@@ -88,19 +99,12 @@ def history(num_rows=-1):
             history += [x]
     else:
         for x in db.history.find().sort('timestamp',pymongo.DESCENDING).limit(num_rows):
-            history += [x]        
+            history += [x]
 
     df = pandas.DataFrame(history)
-    df = df[['timestamp', 'type', 'user', 'key', 'value']]
+    df = df[['timestamp', 'type', 'user', 'key', 'value', 'old_value']]
     return df
 
-def server_get_value(key , rocksdb):
-    url = "http://localhost:8080/get"
-    querystring = {"key":key, "db": rocksdb}
-    response = requests.request("GET", url, params=querystring)
-    if response.status_code == 500:
-        return "key not found"
-    return response.text  
 
 def get_value(key):
     if db.data.find_one({'id': key}) is not None:
@@ -144,7 +148,27 @@ class KeyValueStore(cmd.Cmd):
             num_rows = -1
         
         print(history(num_rows=num_rows))
-
+    
+    def do_ihist(self, line):
+        '''ihist [startDate] (optional) [endDate]
+        retrieve history for specified date if one date is provided
+        retrieve history for specified date range (greater than or equal to start date, less than end date) if two dates are provided
+        '''
+        if len(line.split(',')) < 2:
+            startDate = datetime.datetime.strptime(line, "%Y-%m-%d")
+            endDate = startDate + datetime.timedelta(days=1)
+            print startDate
+        else:
+            startDate, endDate = "".join(line.split(" ")).split(',')
+            startDate = datetime.datetime.strptime(startDate, "%Y-%m-%d")
+            endDate = datetime.datetime.strptime(endDate, "%Y-%m-%d")
+        l = list(db.history.find({'timestamp': {'$lt': endDate , '$gte': startDate}}))
+        if len(l) is 0:
+            print "no transactions found within specified date range"
+        else:
+            print(pandas.DataFrame(l)[['timestamp', 'type', 'user', 'key', 'value', 'old_value']])
+    
+        
     def do_EOF(self, line):
         '''halt current stream of input
         '''
