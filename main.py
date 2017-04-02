@@ -12,9 +12,6 @@ import json
 import ast
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-'''
-authors: Koushik Krishnan, Nick Kalteux
-'''
 # Config
 source_email = 'krishnan.koushik@gmail.com'
 dest_email = 'kalteuxn@gmail.com'
@@ -23,10 +20,6 @@ client = MongoClient()
 db = client.primer
 rows, columns = os.popen('stty size', 'r').read().split()
 pandas.set_option('display.width', int(columns))
-# COMMNANDS
-# SET KEY, VALUE 
-# GET KEY 
-# DROP KEY 
 
 def send_email(t_type, history):
     msg = MIMEMultipart()
