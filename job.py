@@ -11,28 +11,35 @@ class Job():
         self.q = {}
         jobs.append(self)
     
-    def add(self, k, v):
+    def add_to_q(self, k, v):
         if k not in q.keys():
             q[k] = v
         else:
             q[k] = str(q[k]) + str(v) 
 
-    def func(self, key, value):
+    def traverse_helper(self, key, value):
         if isinstance(value, dict):
             for k, v in value.iteritems():
-                func(str(key) + '.' + k, v)
+                traverse_helper(str(key) + '.' + k, v)
         else:
-            add(key, str(value))
+            add_to_q(key, str(value))
 
-    def wrapper(self, d):
+    def traverse(self, d):
         for k, v in d.iteritems():
-            func(k, v)
+            traverse_helper(k, v)
 
-    def flush(self):
-        for k, v in q.iteritems():
-            
+    def flush_q(self):
+        while len(q) != 0:
+            k, v = popitem()
+            # TODO add this to history
 
     def run(self):
         # execute the command
         output = os.system(self.command)
-        self.parse_func(output)
+        d = self.parse_func(output)
+        traverse(d)
+        flush_q()
+    
+    def schedule_job(self):
+        
+
