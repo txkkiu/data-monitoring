@@ -12,14 +12,47 @@ import json
 import ast
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from rules import rules
+import re
+import sendgrid
+from sendgrid.helpers.mail import *
+from email_config import *
+import email_config
+
 # Config
-source_email = 'krishnan.koushik@gmail.com'
-dest_email = 'kalteuxn@gmail.com'
+sg = sendgrid.SendGridAPIClient(apikey=sendgrid_key)
 
 client = MongoClient()
 db = client.primer
-rows, columns = os.popen('stty size', 'r').read().split()
-pandas.set_option('display.width', int(columns))
+# rows, columns = os.popen('stty size', 'r').read().split()
+# pandas.set_option('display.width', int(columns))
+keys = ['_id','key','user','type','timestamp','value','old_value']
+
+def match_rule(rule, history_in):
+
+    for key in rule:
+        if re.match(str(rule[key]), str(history_in[key])):
+            return True
+    return False
+
+def is_important(history_in):
+    for rule in rules:
+        current_rule = dict.fromkeys(keys, r'\b\B')
+
+        # populate the current_rule
+        for rule_key in rule:
+            current_rule[rule_key] = rule[rule_key]
+        # check if the current rule matches this history instance 
+        return match_rule(current_rule, history_in)
+
+def send_email_sendgrid(t_type, history):
+    from_email = Email(source_email)
+    to_email = Email(dest_email)
+    subject = 'DATA_ADDED' if t_type == 'CREATE' else 'DATA_UPDATED'
+    body = 'User ' + history['user'] + ' has ' + t_type + 'D key = ' + history['key'] + ' with value = ' + history['value']
+    content = Content('text/plain', body)
+    mail = Mail(from_email, subject, to_email, content)
+    response = sg.client.mail.send.post(request_body=mail.get())
 
 def send_email(t_type, history):
     msg = MIMEMultipart()
@@ -60,8 +93,11 @@ def set_pair(key, value, rocksdb):
         history_in['user'] = user
         history_in['type'] = t_type
         history_in['timestamp'] = now
-        result_h = db.history.insert_one(history_in)
-        #send_email(t_type, history_in)
+        db.history.insert_one(history_in)
+
+        if is_important(history_in):
+            send_email_sendgrid(t_type, history_in)
+
         return 'success'
 
 def server_get_value(key , rocksdb):
