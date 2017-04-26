@@ -19,6 +19,7 @@ from sendgrid.helpers.mail import *
 from email_config import *
 import email_config
 from importance import *
+import ast
 
 client = MongoClient()
 db = client.primer
@@ -110,18 +111,23 @@ def server_set_value(key, value, rocksdb):
 #compares the previous database instance with the current database, after a job runs
 #deletes all missing keys, storing information about these deletes in the history database     
 def track_deletes(db, keys):
-    url = "http://localhost:8080/keys?db=db" 
+    url = "http://localhost:8080/keys" 
     querystring = {"db": db}
-    response = requests.request("GET", url, params=querystring)
+    response = requests.request("POST", url, params=querystring)
     if response.status_code != requests.codes.ok:
         return "key not found" 
     #figure out what to do with this
-    #oldkeys = json.loads(response.text)[] 
-    deletedkeys = list(set(oldkeys) - set(keys))
+    oldkeys = json.loads(response.text)['value']
+    oldkeys = ast.literal_eval(oldkeys)
+    for k in keys:
+        if k in oldkeys:
+            oldkeys.remove(k)
+    deletedkeys = oldkeys
     for deletedkey in deletedkeys:
         delete_key(deletedkey, db)
 
 def delete_key(key, rocksdb):
+    print('deleting key', key)
     oldValue = server_get_value(key, rocksdb)
     url = "http://localhost:8080/delete"
     querystring = {"key":key, "db": rocksdb}
