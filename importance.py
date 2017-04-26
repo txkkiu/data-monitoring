@@ -1,5 +1,5 @@
 from history_tracker import *
-
+import email_config
 
 keys = ['_id','key','user','type','timestamp','value','old_value']
 
@@ -18,16 +18,19 @@ def is_important(history_in):
         for regex_tuple in rule['regexes']:
             current_rule[regex_tuple[0]] = regex_tuple[1]
         # check if the current rule matches this history instance 
-        return match_rule(current_rule, history_in)
+        if match_rule(current_rule, history_in):
+            #send_email(history_in, email_config.source_email, rule['emails'])
+            return True
+    return False
 
-def send_email(t_type, history, source_email, dest_email):
+def send_email( history, source_email, dest_email):
     #TODO: Implement this to work on Filoseta's machine
     msg = MIMEMultipart()
     msg['From'] = source_email
     msg['To'] = dest_email
     subject = 'DATA_ADDED' if t_type == 'CREATE' else 'DATA_UPDATED'
     msg['Subject'] = subject
-    body = 'User ' + history['user'] + ' has ' + t_type + 'D key = ' + history['key'] + ' with value = ' + history['value']
+    body = 'User ' + history['user'] + ' has ' + history['type'] + 'D key = ' + history['key'] + ' with value = ' + history['value']
     msg.attach(MIMEText(body, 'plain'))
     s = smtplib.SMTP('')
     s.sendmail(source_email, dest_email, msg.as_string())

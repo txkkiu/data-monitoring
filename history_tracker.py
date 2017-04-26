@@ -53,10 +53,7 @@ def set_pair(key, value, rocksdb):
         history_in['type'] = t_type
         history_in['timestamp'] = now
         db.history.insert_one(history_in)
-
-        if is_important(history_in):
-            #send_email_sendgrid(t_type, history_in)
-            print "important key detected"
+        is_important(history_in):
         return 'success'
 #functions that wrap around mongo queries
 def get_value(key):
@@ -147,6 +144,8 @@ def delete_key(key, rocksdb):
         history_in['type'] = t_type
         history_in['timestamp'] = now
         db.history.insert_one(history_in)
+        is_important(key):
+
     return "key deleted"    
 
 def get_value(key):
