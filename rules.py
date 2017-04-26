@@ -7,6 +7,6 @@
 rules = [
     {
         'regexes': [('key', 'important'), ('value', 'important')],
-        'emails': ['kalteuxn@gmail.com']
+        'emails': ['kalteuxn@gmail.com', 'kkrishnan8@gatech.edu']
     }
 ]
