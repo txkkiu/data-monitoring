@@ -6,7 +6,7 @@
 #TODO: write logic to send to list of emails
 rules = [
     {
-        'regexes': [('key', 'important'), ('value','important')],
+        'regexes': [('key', 'important'), ('value', 'important')],
         'emails': ['kalteuxn@gmail.com']
     }
 ]

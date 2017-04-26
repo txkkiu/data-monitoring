@@ -30,5 +30,5 @@ def send_email(t_type, history, source_email, dest_email):
     body = 'User ' + history['user'] + ' has ' + t_type + 'D key = ' + history['key'] + ' with value = ' + history['value']
     msg.attach(MIMEText(body, 'plain'))
     s = smtplib.SMTP('')
-    s.sendmail(source_email, [dest_email], msg.as_string())
+    s.sendmail(source_email, dest_email, msg.as_string())
     s.quit()
