@@ -94,6 +94,16 @@ class KeyValueStore(cmd.Cmd):
         else:
             print "no keys found for regex: ", regex 
 
+    def do_deletekey(self, line):
+        '''delete [key], [db]
+        if the key exists within the specified db, the value will be deleted
+        '''
+        if len(line.split(',')) != 2:
+            print('Error get takes 2 arguments "KEY, DB"')
+        else:
+            key, rocksdb = "".join(line.split(" ")).split(',')
+            print(delete_key(key, rocksdb))
+
     def do_EOF(self, line):
         '''halt current stream of input
         '''

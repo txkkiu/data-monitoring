@@ -116,15 +116,24 @@ def track_deletes(db, keys):
     if response.status_code != requests.codes.ok:
         return "key not found" 
     #figure out what to do with this
-    oldkeys = json.loads(response.text)[] 
+    #oldkeys = json.loads(response.text)[] 
     deletedkeys = list(set(oldkeys) - set(keys))
     for deletedkey in deletedkeys:
+        delete_key(deletedkey, db)
+
+def delete_key(key, rocksdb):
+    oldValue = server_get_value(key, rocksdb)
+    url = "http://localhost:8080/delete"
+    querystring = {"key":key, "db": rocksdb}
+    response = requests.request("POST", url, params=querystring)
+    if response.status_code != requests.codes.ok:
+        return "key not found"
+    else:
         t_type = "DELETE"
         history_in = {}
-        oldValue = server_get_value(oldValue)
         history_in['old_value'] = oldValue
         now = datetime.datetime.now()
-        key_data = str(deletedkey)
+        key_data = str(key)
         user = getpass.getuser()
         history_in['key'] = key_data
         history_in['value'] = ""
@@ -132,15 +141,8 @@ def track_deletes(db, keys):
         history_in['type'] = t_type
         history_in['timestamp'] = now
         db.history.insert_one(history_in)
-        delete_key(deletedkey, db)
+    return "key deleted"    
 
-def delete_key(key, db):
-    url = "http://localhost:8080/delete"
-    querystring = {"key":key, "db": rocksdb}
-    response = requests.request("POST", url, params=querystring)
-    if response.status_code != requests.codes.ok:
-        return "key not found" 
-    return json.loads(response.text)['value']      
 def get_value(key):
     if db.data.find_one({'id': key}) is not None:
         return db.data.find_one({'id': key})[key]
