@@ -141,6 +141,6 @@ def get_value(key):
 def get_user(user):
     return list(db.history.find({'user':user}))
 def get_key(key):
-    return list(db.history.find({'key':key}));
+    return list(db.history.find({'key':key}))
 def get_important(regex):
     return list(db.history.find({'key': {'$regex': regex}}))

@@ -1,14 +1,17 @@
 import os
+import schedule
+import history_tracker
 
 jobs = []
 
 class Job():
-    def __init__(self, name, cron_schedule, command, parse_func):
+    def __init__(self, name, command, parse_func):
         self.name = name
         self.cron_schedule = cron_schedule
         self.command = command
         self.parse_func = parse_func
         self.q = {}
+        self.scheduler = schedule
         jobs.append(self)
     
     def add_to_q(self, k, v):
@@ -31,15 +34,16 @@ class Job():
     def flush_q(self):
         while len(q) != 0:
             k, v = popitem()
-            # TODO add this to history
+            history_tracker.set_pair(k, v, self.name)
 
     def run(self):
         # execute the command
         output = os.system(self.command)
         d = self.parse_func(output)
-        traverse(d)
-        flush_q()
+        self.traverse(d)
+        self.flush_q()
     
-    def schedule_job(self):
-        
+    def get_scheduler(self):
+        return scheduler
+
 
