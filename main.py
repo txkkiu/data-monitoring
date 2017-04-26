@@ -1,9 +1,10 @@
 from history_tracker import *
-# rows, columns = os.popen('stty size', 'r').read().split()
-# pandas.set_option('display.width', int(columns))
+#for formatting in terminal
+rows, columns = os.popen('stty size', 'r').read().split()
+pandas.set_option('display.width', int(columns))
 
 
-    
+#command line wrappers for functions in history tracker    
 class KeyValueStore(cmd.Cmd):
     
     def do_set(self, line):
